@@ -474,7 +474,7 @@ function renderCard(c, cls) {
 
 // ── Modal Iniciar ──────────────────────────────────────────────────────────
 function abrirIniciar(cardId) {
-  cardSelecionado = todosCards.find(c => c.id === cardId);
+  cardSelecionado = todosCards.find(c => String(c.id) === String(cardId));
   document.getElementById("iniciar-produto").textContent = cardSelecionado.descricao;
   document.getElementById("iniciar-operador").value = "";
   document.getElementById("modal-iniciar").classList.add("open");
@@ -502,7 +502,7 @@ async function confirmarIniciar() {
 
 // ── Modal Finalizar ────────────────────────────────────────────────────────
 function abrirFinalizar(cardId) {
-  cardSelecionado = todosCards.find(c => c.id === cardId);
+  cardSelecionado = todosCards.find(c => String(c.id) === String(cardId));
   conformeSelecionado = null;
   document.getElementById("finalizar-produto").textContent = cardSelecionado.descricao;
   document.getElementById("finalizar-qtd").value = "";
