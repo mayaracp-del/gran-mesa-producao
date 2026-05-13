@@ -483,14 +483,15 @@ function abrirIniciar(cardId) {
 async function confirmarIniciar() {
   const operador = document.getElementById("iniciar-operador").value;
   if (!operador) { mostrarToast("Selecione o operador", "error"); return; }
+  const cardId = cardSelecionado.id;
   fecharModal("iniciar");
   document.getElementById("loading").style.display = "flex";
   try {
     await gql(`mutation {
-      updateCardField(input: { card_id: "${cardSelecionado.id}", field_id: "${FIELD_OPERADORA}", new_value: "${operador}" }) { card { id } }
+      updateCardField(input: { card_id: "${cardId}", field_id: "${FIELD_OPERADORA}", new_value: "${operador}" }) { card { id } }
     }`);
     await gql(`mutation {
-      moveCardToPhase(input: { card_id: "${cardSelecionado.id}", destination_phase_id: "${FASE_EM_PRODUCAO}" }) { card { id } }
+      moveCardToPhase(input: { card_id: "${cardId}", destination_phase_id: "${FASE_EM_PRODUCAO}" }) { card { id } }
     }`);
     mostrarToast("Produção iniciada!", "success");
     await carregarDados();
@@ -532,15 +533,16 @@ function validarFinalizar() {
 async function confirmarFinalizar() {
   const qtd = document.getElementById("finalizar-qtd").value;
   const motivo = document.getElementById("finalizar-motivo").value.trim();
+  const cardId = cardSelecionado.id;
   fecharModal("finalizar");
   document.getElementById("loading").style.display = "flex";
   try {
-    await gql(`mutation { updateCardField(input: { card_id: "${cardSelecionado.id}", field_id: "${FIELD_QTD}", new_value: "${qtd}" }) { card { id } } }`);
-    await gql(`mutation { updateCardField(input: { card_id: "${cardSelecionado.id}", field_id: "${FIELD_CONFORME}", new_value: "${conformeSelecionado}" }) { card { id } } }`);
+    await gql(`mutation { updateCardField(input: { card_id: "${cardId}", field_id: "${FIELD_QTD}", new_value: "${qtd}" }) { card { id } } }`);
+    await gql(`mutation { updateCardField(input: { card_id: "${cardId}", field_id: "${FIELD_CONFORME}", new_value: "${conformeSelecionado}" }) { card { id } } }`);
     if (conformeSelecionado === "Não" && motivo) {
-      await gql(`mutation { updateCardField(input: { card_id: "${cardSelecionado.id}", field_id: "${FIELD_MOTIVO}", new_value: ${JSON.stringify(motivo)} }) { card { id } } }`);
+      await gql(`mutation { updateCardField(input: { card_id: "${cardId}", field_id: "${FIELD_MOTIVO}", new_value: ${JSON.stringify(motivo)} }) { card { id } } }`);
     }
-    await gql(`mutation { moveCardToPhase(input: { card_id: "${cardSelecionado.id}", destination_phase_id: "${FASE_FINALIZADO}" }) { card { id } } }`);
+    await gql(`mutation { moveCardToPhase(input: { card_id: "${cardId}", destination_phase_id: "${FASE_FINALIZADO}" }) { card { id } } }`);
     mostrarToast("Produção finalizada! ✓", "success");
     await carregarDados();
   } catch(e) {
