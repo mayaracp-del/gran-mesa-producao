@@ -474,7 +474,8 @@ function renderCard(c, cls) {
 
 // ── Modal Iniciar ──────────────────────────────────────────────────────────
 function abrirIniciar(cardId) {
-  cardSelecionado = todosCards.find(c => String(c.id) === String(cardId));
+  cardSelecionado = todosCards.find(c => String(c.id) === String(cardId)) || null;
+  if (!cardSelecionado) { mostrarToast("Erro: card não encontrado (tente atualizar)", "error"); return; }
   document.getElementById("iniciar-produto").textContent = cardSelecionado.descricao;
   document.getElementById("iniciar-operador").value = "";
   document.getElementById("modal-iniciar").classList.add("open");
@@ -498,12 +499,15 @@ async function confirmarIniciar() {
   } catch(e) {
     mostrarToast("Erro: " + e.message, "error");
     document.getElementById("loading").style.display = "none";
+  } finally {
+    cardSelecionado = null;
   }
 }
 
 // ── Modal Finalizar ────────────────────────────────────────────────────────
 function abrirFinalizar(cardId) {
-  cardSelecionado = todosCards.find(c => String(c.id) === String(cardId));
+  cardSelecionado = todosCards.find(c => String(c.id) === String(cardId)) || null;
+  if (!cardSelecionado) { mostrarToast("Erro: card não encontrado (tente atualizar)", "error"); return; }
   conformeSelecionado = null;
   document.getElementById("finalizar-produto").textContent = cardSelecionado.descricao;
   document.getElementById("finalizar-qtd").value = "";
@@ -548,12 +552,13 @@ async function confirmarFinalizar() {
   } catch(e) {
     mostrarToast("Erro: " + e.message, "error");
     document.getElementById("loading").style.display = "none";
+  } finally {
+    cardSelecionado = null;
   }
 }
 
 function fecharModal(tipo) {
   document.getElementById(`modal-${tipo}`).classList.remove("open");
-  cardSelecionado = null;
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────────
