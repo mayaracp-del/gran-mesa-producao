@@ -332,7 +332,7 @@ async function carregarDados() {
           cards(first: 100) {
             edges { node {
               id title due_date
-              fields { name field_id value array_value }
+              fields { name value array_value phase_field { id } }
             }}
           }
         }
@@ -344,7 +344,7 @@ async function carregarDados() {
       for (const edge of phase.cards.edges) {
         const card = edge.node;
         const campos = {};
-        for (const f of card.fields) campos[f.field_id] = f.value || (f.array_value && f.array_value[0]) || "";
+        for (const f of card.fields) campos[f.phase_field.id] = f.value || (f.array_value && f.array_value[0]) || "";
         todosCards.push({
           id: card.id,
           titulo: card.title,
