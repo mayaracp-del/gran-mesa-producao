@@ -290,7 +290,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJQaXBlZnkiLCJpYXQiOjE3Nzg2NzU4MDQsImp0aSI6ImZiZTRiNDcwLTNkZTItNDRlMC04MzRlLWViMDllM2ZjZDBmYSIsInN1YiI6MzA1NDU2NjM3LCJ1c2VyIjp7ImlkIjozMDU0NTY2MzcsImVtYWlsIjoibWF5YXJhLnBlcmVpcmFAZ3J1cG9hNy5jb20uYnIifSwidXNlcl90eXBlIjoiYXV0aGVudGljYXRlZCJ9.TTrXnSxVzbKBTh1pVzWiN2kO2230YfBrqdEuE_iOEWYj3QhzvwE-ySPocPRjsHtOfQqxwzC11FGu_BMdPlsPCw";
+// Token gerenciado com segurança pelo Cloudflare Worker
 const PIPE_ID = "307152521";
 const FASE_A_PRODUZIR  = "343131777";
 const FASE_EM_PRODUCAO = "343131778";
@@ -310,9 +310,9 @@ let refreshTimer = null;
 
 // ── GraphQL ────────────────────────────────────────────────────────────────
 async function gql(query, variables = {}) {
-  const resp = await fetch("https://api.pipefy.com/graphql", {
+  const resp = await fetch("https://gran-mesa-proxy.gran-mesa.workers.dev", {
     method: "POST",
-    headers: { "Authorization": `Bearer ${TOKEN}`, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables })
   });
   const data = await resp.json();
