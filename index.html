@@ -541,6 +541,8 @@ async function confirmarFinalizar() {
   fecharModal("finalizar");
   document.getElementById("loading").style.display = "flex";
   try {
+    // Garantir que operadora_executora está preenchida (obrigatório para mover)
+    await gql(`mutation { updateCardField(input: { card_id: "${cardId}", field_id: "${FIELD_OPERADORA}", new_value: "${operadorAtivo}" }) { card { id } } }`);
     await gql(`mutation { updateCardField(input: { card_id: "${cardId}", field_id: "${FIELD_QTD}", new_value: "${qtd}" }) { card { id } } }`);
     await gql(`mutation { updateCardField(input: { card_id: "${cardId}", field_id: "${FIELD_CONFORME}", new_value: "${conformeSelecionado}" }) { card { id } } }`);
     if (conformeSelecionado === "Não" && motivo) {
