@@ -134,6 +134,16 @@
   .btn-iniciar:active, .btn-finalizar:active { transform: scale(0.97); }
   .btn-iniciar { background: var(--lima); color: var(--verde); }
   .btn-finalizar { background: var(--verde); color: white; }
+  .btn-nao-realizar {
+    width: 100%; padding: 13px; border-radius: 10px; border: 2px solid #E57373;
+    background: white; color: #C62828; font-size: 15px; font-weight: 700;
+    cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-nao-realizar:active { background: #FFEBEE; }
+  .check-materiais { margin: 16px 0 8px; }
+  .check-materiais p { font-size: 15px; font-weight: 600; color: #1A1A1A; margin-bottom: 12px; }
+  .check-row { display: flex; gap: 10px; }
+  .check-row .radio-btn { flex: 1; }
   .btn-feito { background: transparent; color: var(--finalizado-border); border: 2px solid var(--finalizado-border); font-size: 13px; padding: 8px; cursor: default; }
 
   /* ── EMPTY STATE ── */
@@ -214,6 +224,20 @@
 <body>
 
 <!-- LOADING -->
+<!-- Modal Não Realizar -->
+<div class="modal-overlay" id="modal-nao-realizar">
+  <div class="modal">
+    <h2>✕ Não Realizar</h2>
+    <p id="nr-produto" style="font-weight:600;margin:8px 0 16px;font-size:15px;"></p>
+    <label style="font-size:13px;font-weight:600;color:#555;display:block;margin-bottom:6px;">Motivo da não realização *</label>
+    <textarea id="nr-motivo" class="modal-input" placeholder="Ex: falta de embalagem, insumo indisponível, decisão de gestão..." style="height:100px;resize:none;"></textarea>
+    <div class="modal-buttons">
+      <button class="btn-cancelar" onclick="fecharModal('nao-realizar')">Cancelar</button>
+      <button class="btn-confirmar" id="btn-confirmar-nr" style="background:#C62828;" onclick="confirmarNaoRealizar()" disabled>Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
   <div style="font-size:15px;font-weight:600;">Carregando produção...</div>
@@ -246,7 +270,7 @@
     <h2>▶ Iniciar Produção</h2>
     <div class="modal-produto" id="iniciar-produto"></div>
     <label>Quem vai produzir?</label>
-    <select id="iniciar-operador">
+    <select id="iniciar-operador" onchange="document.getElementById('btn-confirmar-iniciar').disabled = !(this.value && materiaisSelecionado);">
       <option value="">Selecione o operador...</option>
       <option value="Manu">Manu</option>
       <option value="Jose">Jose</option>
@@ -260,8 +284,15 @@
       <option value="Emilly">Emilly</option>
     </select>
     <div class="modal-actions">
+      <div class="check-materiais">
+        <p>Você tem todos os materiais necessários?</p>
+        <div class="check-row">
+          <button class="radio-btn" id="mat-sim" onclick="selecionarMateriais(true)">✓ Sim, tenho tudo</button>
+          <button class="radio-btn" id="mat-nao" onclick="selecionarMateriais(false)">✗ Não</button>
+        </div>
+      </div>
       <button class="btn-cancelar" onclick="fecharModal('iniciar')">Cancelar</button>
-      <button class="btn-confirmar" id="btn-confirmar-iniciar" onclick="confirmarIniciar()">Iniciar</button>
+      <button class="btn-confirmar" id="btn-confirmar-iniciar" onclick="confirmarIniciar()" disabled>Iniciar</button>
     </div>
   </div>
 </div>
@@ -298,6 +329,8 @@ const PIPE_ID = "307152521";
 const FASE_A_PRODUZIR  = "343131777";
 const FASE_EM_PRODUCAO = "343131778";
 const FASE_FINALIZADO  = "343131779";
+const FASE_NAO_REALIZADA = "343154663";
+const FIELD_MOTIVO_NR = "motivo_da_n_o_realiza_o";
 const FIELD_OPERADORA    = "operadora_executora";
 const FIELD_QTD          = "quantidade_real_produzida";
 const FIELD_CONFORME     = "conforme_planejado";
@@ -421,7 +454,7 @@ function renderizarCards() {
     container.innerHTML = `<div class="empty-state"><div class="icon">🌿</div><div>Nenhuma produção registrada hoje.</div></div>`;
     return;
   }
-  const meuCards = todosCards.filter(c => c.operador === operadorAtivo || c.operadora_executora === operadorAtivo);
+  const meuCards = todosCards.filter(c => (c.operador === operadorAtivo || c.operadora_executora === operadorAtivo) && c.fase_id !== FASE_NAO_REALIZADA);
   const aProduzir   = meuCards.filter(c => c.fase_id === FASE_A_PRODUZIR);
   const emProducao  = meuCards.filter(c => c.fase_id === FASE_EM_PRODUCAO);
   const finalizados = meuCards.filter(c => c.fase_id === FASE_FINALIZADO);
@@ -564,6 +597,38 @@ async function confirmarFinalizar() {
 
 function fecharModal(tipo) {
   document.getElementById(`modal-${tipo}`).classList.remove("open");
+}
+
+// ── Modal Não Realizar ─────────────────────────────────────────────────────
+function abrirNaoRealizar(cardId) {
+  cardSelecionado = todosCards.find(c => String(c.id) === String(cardId)) || null;
+  if (!cardSelecionado) { mostrarToast("Erro: card não encontrado (tente atualizar)", "error"); return; }
+  document.getElementById("nr-produto").textContent = cardSelecionado.descricao;
+  document.getElementById("nr-motivo").value = "";
+  document.getElementById("btn-confirmar-nr").disabled = true;
+  document.getElementById("nr-motivo").oninput = function() {
+    document.getElementById("btn-confirmar-nr").disabled = this.value.trim().length < 3;
+  };
+  document.getElementById("modal-nao-realizar").classList.add("open");
+}
+
+async function confirmarNaoRealizar() {
+  const motivo = document.getElementById("nr-motivo").value.trim();
+  if (!motivo) return;
+  const cardId = cardSelecionado.id;
+  fecharModal("nao-realizar");
+  document.getElementById("loading").style.display = "flex";
+  try {
+    await gql(`mutation { updateCardField(input: { card_id: "${cardId}", field_id: "${FIELD_MOTIVO_NR}", new_value: ${JSON.stringify(motivo)} }) { card { id } } }`);
+    await gql(`mutation { moveCardToPhase(input: { card_id: "${cardId}", destination_phase_id: "${FASE_NAO_REALIZADA}" }) { card { id } } }`);
+    mostrarToast("Registrado como não realizado.", "success");
+    await carregarDados();
+  } catch(e) {
+    mostrarToast("Erro: " + e.message, "error");
+    document.getElementById("loading").style.display = "none";
+  } finally {
+    cardSelecionado = null;
+  }
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────────
